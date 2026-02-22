@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Lime</title>
+
+<style>
+  body {
+    background: #222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  canvas {
+    image-rendering: pixelated;
+    border: 4px solid white;
+  }
+
+  #levelIndicator {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    font-family: Arial;
+    font-size: 20px;
+  }
+</style>
+</head>
+<body>
+
+<script>
+
+	alert("How To Play:")
+	alert("You are the lime block")
+	alert("You need to get to the white block in each level")
+	alert("Good luck")
+
+</script>
+
+<div id="levelIndicator">Level 1</div>
+<canvas id="game" width="400" height="400"></canvas>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const levelIndicator = document.getElementById("levelIndicator");
+
+const scale = 20;
+const gridSize = 20;
+
+// 0 = suelo (pasable)
+// 1-8 = paredes de colores
+// 9 = inicio del nivel
+// 10 = fin del nivel
+
+const levels = [
+  // Nivel 1
+  [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  ],
+  // Nivel 2
+  [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,0,1],
+    [1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,1,2,3,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  ],
+  // Nivel 3
+  [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  ]
+];
+
+let currentLevel = 0;
+let map = levels[currentLevel];
+let player = { x: 0, y: 0 };
+
+// Buscar posición de inicio (9)
+function findStart() {
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+      if (map[y][x] === 9) {
+        player.x = x;
+        player.y = y;
+        return;
+      }
+    }
+  }
+}
+
+// Función de colores
+function getColor(tile) {
+  if (tile === 0) return "#333";
+  if (tile === 1) return "red";
+  if (tile === 2) return "orange";
+  if (tile === 3) return "yellow";
+  if (tile === 4) return "green";
+  if (tile === 5) return "blue";
+  if (tile === 6) return "violet";
+  if (tile === 7) return "brown";
+  if (tile === 8) return "black";
+  if (tile === 9) return "lime";   // inicio del nivel
+  if (tile === 10) return "white"; // fin del nivel
+}
+
+// Dibujar mapa y jugador
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+      ctx.fillStyle = getColor(map[y][x]);
+      ctx.fillRect(x * scale, y * scale, scale, scale);
+    }
+  }
+  ctx.fillStyle = "lime";
+  ctx.fillRect(player.x * scale, player.y * scale, scale, scale);
+}
+
+// Cambiar nivel
+function nextLevel() {
+  currentLevel++;
+  if (currentLevel >= levels.length) {
+    alert("Congratulations you beat the game!🎉");
+    currentLevel = 0;
+  }
+  map = levels[currentLevel];
+  findStart();
+  levelIndicator.innerText = "Level " + (currentLevel+1);
+  draw();
+}
+
+// Movimiento con colisiones
+document.addEventListener("keydown", (e) => {
+  let newX = player.x;
+  let newY = player.y;
+
+  if (e.key === "ArrowUp") newY--;
+  if (e.key === "ArrowDown") newY++;
+  if (e.key === "ArrowLeft") newX--;
+  if (e.key === "ArrowRight") newX++;
+
+  if (newX >= 0 && newX < map[0].length && newY >= 0 && newY < map.length) {
+    let nextTile = map[newY][newX];
+    if (nextTile === 0 || nextTile === 9) { // pasable
+      player.x = newX;
+      player.y = newY;
+    } else if (nextTile === 10) { // fin del nivel
+      player.x = newX;
+      player.y = newY;
+      nextLevel();
+      return;
+    }
+  }
+
+  draw();
+});
+
+// Iniciar nivel
+findStart();
+draw();
+</script>
+
+</body>
+</html>
